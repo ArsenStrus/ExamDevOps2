@@ -1,0 +1,60 @@
+name: "Terraform Destroy"
+
+on:
+  # Цей рядок дозволяє запускати конвеєр вручну
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  GOOGLE_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
+
+  # Змінні для проекту та регіону
+  TF_VAR_project_id: ${{ secrets.PROJECT_ID }}
+  TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+  TF_VAR_region: "europe-central2"
+  TF_VAR_zone: "europe-central2-a"
+
+  # Назви ресурсів 
+  TF_VAR_vm_name: "strus-minikube-node"
+  TF_VAR_vpc_name: "strus-vpc"
+  TF_VAR_subnet_name: "strus-subnet"
+  TF_VAR_firewall_name: "strus-firewall"
+
+      # Мережеві налаштування
+  TF_VAR_subnet_cidr: "10.10.10.0/24"
+
+      # Конфігурація ВМ
+  TF_VAR_machine_type: "e2-medium"
+  TF_VAR_disk_size: "20"
+  TF_VAR_image: "ubuntu-os-cloud/ubuntu-2404-lts-amd64"
+
+      # Бакет для стану (якщо він використовується як змінна у коді)
+  TF_VAR_state_bucket: "exam-terraform-strus"
+  TF_VAR_bucket_name: "strus-bucket"
+
+jobs:
+  terraform-destroy:
+    name: "Destroy Infrastructure"
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./terraform
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init -input=false
+
+      # Крок перевірки (що саме буде видалено)
+      - name: Terraform Plan Destroy
+        run: terraform plan -destroy -input=false
+
+      # Власне видалення
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve -input=false
