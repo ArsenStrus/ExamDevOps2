@@ -1,6 +1,6 @@
 terraform {
   backend "gcs" {
-    bucket = "terraform-state-lab3-devops2"
+    bucket = "exam-terraform-strus"
     prefix = "terraform/state"
   }
 }
